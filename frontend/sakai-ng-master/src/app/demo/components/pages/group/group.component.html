@@ -1,0 +1,201 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card px-6 py-6">
+            <p-toast></p-toast>
+            <p-toolbar styleClass="mb-4" *ngIf="authService.hasRole('ROLE_ADMIN')">
+                <ng-template pTemplate="left" >
+                    <div class="my-2" >
+                        <button pButton pRipple label="New" icon="pi pi-plus" class="p-button-success mr-2"
+                            (click)="openAddGroupDialog()"></button>
+                        <button pButton pRipple label="Delete" icon="pi pi-trash" class="p-button-danger"
+                            (click)="deleteSelectedGroups()"
+                            [disabled]="!selectedGroups || !selectedGroups.length"></button>
+                    </div>
+                </ng-template>
+            </p-toolbar>
+
+            <p-table #dt [value]="getFilteredGroups()" [columns]="cols" responsiveLayout="scroll" [rows]="10"
+                [globalFilterFields]="['name', 'description']" [paginator]="true" [rowsPerPageOptions]="[10,20,30]"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                [(selection)]="selectedGroups" selectionMode="multiple" [rowHover]="true" dataKey="id">
+                <ng-template pTemplate="caption">
+                    <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                        <h5 class="m-0">Manage Groups</h5>
+                        <span class="block mt-2 md:mt-0 p-input-icon-left">
+                            <i class="pi pi-search"></i>
+                            <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..."
+                                class="w-full sm:w-auto" />
+                        </span>
+                    </div>
+                </ng-template>
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 3rem">
+                            <p-tableHeaderCheckbox *ngIf="authService.hasRole('ROLE_ADMIN')"></p-tableHeaderCheckbox>
+                        </th>
+                        <th pSortableColumn="id">ID<p-sortIcon field="id"></p-sortIcon></th>
+                        <th pSortableColumn="name">Name<p-sortIcon field="name"></p-sortIcon></th>
+                        <th pSortableColumn="description">Description<p-sortIcon field="description"></p-sortIcon></th>
+                        <th></th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-group >
+                    <tr>
+                        <td>
+                            <p-tableCheckbox [value]="group" *ngIf="authService.hasRole('ROLE_ADMIN')"></p-tableCheckbox>
+                        </td>
+                        <td style="width:22%; min-width:10rem;"><span class="p-column-title">ID</span> {{group.id}}</td>
+                        <td style="width:32%; min-width:10rem;"><span class="p-column-title">Name</span> {{group.name}}
+                        </td>
+                        <td style="width:42%; min-width:10rem;"><span class="p-column-title">Description</span>
+                            {{group.description}}</td>
+                        <td>
+                            <div class="flex">
+                                <button pButton pRipple icon="pi pi-pencil" 
+                                *ngIf="authService.hasRole('ROLE_MODERATOR') || authService.hasRole('ROLE_ADMIN')"
+                                    class="p-button-rounded p-button-success mr-2" (click)="openEditGroupDialog(group)"></button>
+                                <button pButton pRipple icon="pi pi-trash" 
+                                *ngIf="authService.hasRole('ROLE_ADMIN')"
+                                    class="p-button-rounded p-button-warning mr-2"
+                                    (click)="deleteGroup(group)"></button>
+                                <button pButton pRipple icon="pi pi-users" class="p-button-rounded"
+                                *ngIf="authService.hasRole('ROLE_MODERATOR') || authService.hasRole('ROLE_ADMIN')"
+                                    (click)="manageGroupUsers(group)"></button>
+                                <p-button icon="pi pi-sign-out" [rounded]="true" severity="danger" [outlined]="true"
+                                    *ngIf="authService.hasRole('ROLE_USER')" (click)="openQuitGroupDialog(group)"
+                                    class="bg-red-100 border-round-3xl"/>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+
+        <p-dialog [(visible)]="quitGroupDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
+            <div class="flex align-items-center justify-content-center">
+                <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+                <span *ngIf="group">Are you sure you want to leave this group <b>{{this.group.name}}</b>?</span>
+            </div>
+            <ng-template pTemplate="footer">
+                <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No"
+                    (click)="quitGroupDialog = false"></button>
+                <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes"
+                    (click)="leaveGroup(group)"></button>
+            </ng-template>
+        </p-dialog>
+
+        <p-dialog [(visible)]="editGroupDialog" [style]="{width: '500px'}" header="Edit Group" [modal]="true"
+            class="p-fluid">
+            <ng-template pTemplate="content">
+                <form [formGroup]="editGroupForm">
+                    <div class="field">
+                        <label for="name" class="label-required">Name</label>
+                        <input type="text" id="name" pInputText formControlName="name" autofocus />
+                        <small class="p-error" *ngIf="editGroupForm.get('name').invalid && (editGroupForm.get('name').dirty || editGroupForm.get('name').touched)">
+                            <span  *ngIf="editGroupForm.get('name').errors?.required"> Name is required.</span>
+                        </small>
+                    </div>
+                    <div class="field">
+                        <label for="description">Description</label>
+                        <textarea id="description" pInputTextarea formControlName="description"></textarea>
+                    </div>
+                </form>
+            </ng-template>
+
+            <ng-template pTemplate="footer">
+                <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text"
+                    (click)="hideDialog()"></button>
+                <button pButton pRipple label="Update" icon="pi pi-check" class="p-button-text"
+                    (click)="validateEdit()" [disabled]="editGroupForm.invalid"></button>
+            </ng-template>
+        </p-dialog>
+
+        <p-dialog [(visible)]="addGroupDialog" [style]="{width: '450px'}" header="Add Group" [modal]="true"
+            class="p-fluid">
+            <ng-template pTemplate="content">
+                <form [formGroup]="addGroupForm">
+                    <div class="field">
+                        <label for="name" class="label-required">Name</label>
+                        <input type="text" id="name" pInputText formControlName="name" autofocus />
+                        <small class="p-error" *ngIf="addGroupForm.get('name').invalid && (addGroupForm.get('name').dirty || addGroupForm.get('name').touched)">
+                            <span  *ngIf="addGroupForm.get('name').errors?.required">Name is required.</span>
+                        </small>
+                    </div>
+                    <div class="field">
+                        <label for="description">Description</label>
+                        <textarea id="description" pInputTextarea formControlName="description"></textarea>
+                    </div>
+                </form>
+            </ng-template>
+
+            <ng-template pTemplate="footer">
+                <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text"
+                    (click)="hideDialog()"></button>
+                <button pButton pRipple label="Add" icon="pi pi-check" class="p-button-text"
+                    (click)="validateAdd()" [disabled]="addGroupForm.invalid"></button>
+            </ng-template>
+        </p-dialog>
+
+        <p-dialog [(visible)]="deleteGroupDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
+            <div class="flex align-items-center justify-content-center">
+                <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+                <span *ngIf="group">Are you sure you want to delete <b>{{group.name}}</b>?</span>
+            </div>
+            <ng-template pTemplate="footer">
+                <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No"
+                    (click)="deleteGroupDialog = false"></button>
+                <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes"
+                    (click)="confirmDelete()"></button>
+            </ng-template>
+        </p-dialog>
+
+        <p-dialog [(visible)]="deleteGroupsDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
+            <div class="flex align-items-center justify-content-center">
+                <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+                <span>Are you sure you want to delete selected groups?</span>
+            </div>
+            <ng-template pTemplate="footer">
+                <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No"
+                    (click)="deleteGroupsDialog = false"></button>
+                <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes"
+                    (click)="confirmDeleteSelected()"></button>
+            </ng-template>
+        </p-dialog>
+        <p-dialog [(visible)]="manageUsersGroupDialog" [modal]="true" [header]="'Manage group\'s users'" [style]="{width:'1000px'}" class="p-fluid">
+            <ng-template pTemplate="content">
+                <p-pickList [source]="availableUsers" [target]="users" sourceHeader="Available Users"
+                    [targetHeader]="group.name" [dragdrop]="true" [responsive]="true"
+                    [sourceStyle]="{ height: '28rem' }" [targetStyle]="{ height: '28rem' }" filterBy="firstName"
+                    sourceFilterPlaceholder="Search by name" targetFilterPlaceholder="Search by name"
+                    breakpoint="1400px">
+                    <ng-template let-user pTemplate="item">
+                        <div class="flex flex-wrap p-2 align-items-center gap-3">
+                            <div class="flex-1 flex flex-column gap-2">
+                                <div class="flex align-items-center gap-2">
+                                    <i class="pi pi-user text-sm"></i>
+                                    <span class="font-bold">
+                                        {{ user.firstName }} {{user.lastName}}
+                                    </span>
+                                </div>
+                                <div class="flex align-items-center gap-2">
+                                    <i class="pi pi-envelope text-sm"></i>
+                                    <span>
+                                        {{ user.email }}
+                                    </span>
+                                </div>
+                            </div>
+                            <span class="font-bold text-900">
+                                {{ 'ID: ' + user.id }}
+                            </span>
+                        </div>
+                    </ng-template>
+                </p-pickList>
+            </ng-template>
+            <ng-template pTemplate="footer">
+                <button pButton pRipple type="button" label="Submit" (click)="validateManageGroupUsers()"></button>
+            </ng-template>
+        </p-dialog>
+
+    </div>
+</div>

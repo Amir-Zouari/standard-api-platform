@@ -1,0 +1,91 @@
+<div class="grid">
+    <!-- User Details Section -->
+    <ng-container *ngIf="authService.hasRole('ROLE_USER')">
+        <div class="col-12 lg:col-6 xl:col-3" [ngStyle]="{width: '100%'}">
+            <div class="card surface-card shadow-3 p-5 border-round-2xl mb-5">
+                <div class="border-round m-2 text-center p-2" style="border: 1px solid var(--surface-d)">
+                    <div class="my-5">
+                        <i class="pi pi-user text-blue-500 text-7xl bg-blue-100 border-round  p-3"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-900 font-bold text-6xl mb-1">{{authenticatedUser.firstName}} {{authenticatedUser.lastName}}</h1>
+                        <h4 class="mt-0 mb-3">{{authenticatedUser.email}}</h4>
+                        <div *ngFor="let role of authenticatedUserRoles" class="role-badge">
+                            <span [ngClass]="getRoleClass(role)" class="role-text">{{ role }}</span>
+                        </div>
+                        
+                    </div>
+                </div>
+                <!-- <div class="flex align-items-center mb-5">
+                    <div class="flex align-items-center justify-content-center bg-blue-100 border-round p-3 mr-4"
+                        [ngStyle]="{width: '4rem', height: '4rem'}">
+                        <i class="pi pi-user text-blue-500 text-4xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-900 font-bold text-3xl mb-1">User Details</h2>
+                        <p class="text-600 text-lg">Here's some information about your account</p>
+                    </div>
+                </div>
+
+                <div class="grid text-center">
+                    <div class="col-12 md:col-6 p-3 border-bottom-1 md:border-bottom-0 md:border-right-1 border-light">
+                        <span class="text-600 font-semibold block">First Name</span>
+                        <span class="text-900 font-extrabold text-2xl">{{authenticatedUser.firstName}}</span>
+                    </div>
+                    <div class="col-12 md:col-6 p-3 border-bottom-1 border-light">
+                        <span class="text-600 font-semibold block">Last Name</span>
+                        <span class="text-900 font-extrabold text-2xl">{{authenticatedUser.lastName}}</span>
+                    </div>
+                    <div class="col-12 md:col-6 p-3 border-right-1 md:border-bottom-0 border-light">
+                        <span class="text-600 font-semibold block">Email</span>
+                        <span class="text-900 font-extrabold text-2xl">{{authenticatedUser.email}}</span>
+                    </div>
+                    <div class="col-12 md:col-6 p-3">
+                        <span class="text-600 font-semibold block">Roles</span>
+                        <div *ngFor="let role of authenticatedUserRoles" class="role-badge">
+                            <span [ngClass]="getRoleClass(role)" class="role-text">{{ role }}</span>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+    </ng-container>
+    <!-- Admin/Moderator Section -->
+    <ng-container *ngIf="authService.hasRole('ROLE_MODERATOR') || authService.hasRole('ROLE_ADMIN')">
+
+        <div class="col-12 lg:col-6 xl:col-3 flex flex-wrap justify-content-center align-items-center gap-4 mb-2" [ngStyle]="{width: '100%'}">
+            <div class="card surface-card shadow-3 p-5 border-round-2xl mb-2 "  [ngStyle]="{width: '49%'}">
+                <div class="flex align-items-center mb-5">
+                    <div class="flex align-items-center justify-content-center bg-blue-100 border-round p-3 mr-4"
+                        [ngStyle]="{width: '7rem', height: '7rem'}">
+                        <i class="pi pi-users text-7xl text-blue-500 text-4xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-900 font-bold text-3xl mb-1">Users Overview</h2>
+                        <p class="text-600 text-lg">Total Users</p>
+                        <div class="text-900 font-extrabold text-4xl">{{users.length}}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card surface-card shadow-3 p-5 border-round-2xl mb-2 "  [ngStyle]="{width: '49%'}">
+                <div class="flex align-items-center mb-5">
+                    <div class="flex align-items-center justify-content-center bg-orange-100 border-round p-3 mr-4"
+                        [ngStyle]="{width: '7rem', height: '7rem'}">
+                        <i class="pi pi-th-large text-7xl text-orange-500 text-4xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-900 font-bold text-3xl mb-1">Groups Overview</h2>
+                        <p class="text-600 text-lg">Total Groups</p>
+                        <div class="text-900 font-extrabold text-4xl">{{groups.length}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 xl:col-6" [ngStyle]="{width: '50%'}">
+            <div class="card surface-card shadow-3 p-5 border-round-2xl">
+                <h2 class="text-900 font-bold text-3xl mb-5">Groups Overview</h2>
+                <p-chart type="bar" [data]="chartData" [options]="chartOptions"></p-chart>
+            </div>
+        </div>
+    </ng-container>
+</div>

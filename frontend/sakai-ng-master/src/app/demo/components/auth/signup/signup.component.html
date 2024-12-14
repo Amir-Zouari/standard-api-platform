@@ -1,0 +1,108 @@
+<div class="surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden">
+    <div class="flex flex-column align-items-center justify-content-center">
+        <img src="assets/layout/images/logoPro.png"
+            alt="Sakai logo" class="mb-5 w-6rem flex-shrink-0">
+        <p-toast *ngIf="!isMessageLong"/>
+        <p-messages *ngIf="isMessageLong"></p-messages>
+        <div
+            style="border-radius:56px; padding:0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%);">
+            <div class="w-full surface-card py-8 px-5 sm:px-8" style="border-radius:53px">
+                <div class="text-center mb-5">
+                    <div class="text-900 text-5xl font-medium mb-3">Sign Up</div>
+                    <span class="text-600 font-medium">Create your account</span>
+                </div>
+
+                <form [formGroup]="signupForm" >
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="field mb-4">
+                        <label for="firstName" class="block text-900 text-xl font-medium mb-2 label-required">First Name</label>
+                        <input id="firstName" type="text" placeholder="First Name" pInputText class="w-full md:w-30rem mb-2"
+                            formControlName="firstName">
+                        <small *ngIf="firstName?.invalid && (firstName?.dirty || firstName?.touched)" class="block">
+                            <span class="p-error" *ngIf="firstName?.errors?.required">First name is required.</span>
+                            <span class="p-error" *ngIf="firstName?.errors?.minlength">First name must be at least 2 characters long.</span>
+                            <span class="p-error" *ngIf="firstName?.errors?.maxlength">First name cannot be more than 50 characters long.</span>
+                        </small>
+                    </div>
+
+                    <div class="field mb-4">
+                        <label for="lastName" class="block text-900 text-xl font-medium mb-2 label-required">Last Name</label>
+                        <input id="lastName" type="text" placeholder="Last Name" pInputText class="w-full md:w-30rem mb-2"
+                            formControlName="lastName">
+                        <small *ngIf="lastName?.invalid && (lastName?.dirty || lastName?.touched)" class="block">
+                            <span class="p-error" *ngIf="lastName?.errors?.required">Last name is required.</span>
+                            <span class="p-error" *ngIf="lastName?.errors?.minlength">Last name must be at least 2 characters long.</span>
+                            <span class="p-error" *ngIf="lastName?.errors?.maxlength">Last name cannot be more than 50 characters long.</span>
+                        </small>
+                    </div>
+                    <div class="field mb-4">
+                        <label for="username" class="block text-900 text-xl font-medium mb-2 label-required">Username</label>
+                        <input id="username" type="text" placeholder="Username" pInputText
+                            class="w-full md:w-30rem mb-2" formControlName="username" (blur)="checkUsername()">
+                        <small *ngIf="username?.invalid && (username?.dirty || username?.touched)" class="block">
+                            <span class="p-error" *ngIf="username?.errors?.required">Username is required.</span>
+                            <span class="p-error" *ngIf="username?.errors?.minlength">Username must be at least 3
+                                characters long.</span>
+                            <span class="p-error" *ngIf="username?.errors?.maxlength">Username cannot be more than 20
+                                characters long.</span>
+                            <span class="p-error" *ngIf="username?.errors?.notAvailable">This username is already
+                                taken.</span>
+                            <span class="p-error" *ngIf="username?.errors?.pattern">Username must contain only alphanumeric
+                                characters and underscores.</span>
+                        </small>
+                    </div>
+
+                    <div class="field mb-4">
+                        <label for="email" class="block text-900 text-xl font-medium mb-2 label-required">Email</label>
+                        <input id="email" type="text" placeholder="Email address" pInputText
+                            class="w-full md:w-30rem mb-2" formControlName="email" (blur)="checkEmail()">
+                        <small *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="block">
+                            <span class="p-error" *ngIf="email?.errors?.required">Email is required.</span>
+                           <!--  <span class="p-error" *ngIf="email?.errors?.pattern">Invalid email address.</span> -->
+                            <span class="p-error" *ngIf="email?.errors?.notAvailable">This email is already in
+                                use.</span>
+                            <span class="p-error" *ngIf="email?.errors?.email">Invalid email address.</span>
+
+                           <!--  <span class="p-error" *ngIf="email?.errors?.maxlength">Email cannot be more than 150
+                                characters long.</span> -->
+                                
+                        </small>
+                    </div>
+
+                    <div class="field mb-4">
+                        <label for="password" class="block text-900 text-xl font-medium mb-2 label-required">Password</label>
+                        <p-password id="password" placeholder="Password" formControlName="password" [toggleMask]="true"
+                            inputStyleClass="w-full p-3 md:w-30rem" [feedback]="false"></p-password>
+                        <small *ngIf="password?.invalid && (password?.dirty || password?.touched)" class="block">
+                            <span class="p-error" *ngIf="password?.errors?.required">Password is required.</span>
+                            <span class="p-error" *ngIf="password?.errors?.minlength">Password must be at least 6
+                                characters long.</span>
+                            <span class="p-error" *ngIf="password?.errors?.maxlength">Password cannot be more than 40
+                                characters long.</span>
+                        </small>
+                    </div>
+
+                    <div class="field mb-4">
+                        <label for="confirmPassword" class="block text-900 text-xl font-medium mb-2 label-required">Confirm
+                            Password</label>
+                        <p-password id="confirmPassword" placeholder="Confirm Password"
+                            formControlName="confirmPassword" [toggleMask]="true"
+                            inputStyleClass="w-full p-3 md:w-30rem" [feedback]="false"></p-password>
+                            <br/>
+                        <small
+                            *ngIf="signupForm.errors?.['mismatch'] && (confirmPassword?.dirty || confirmPassword?.touched)" class="block">
+                            <span class="p-error">Passwords do not match.</span>
+                        </small>
+                    </div>
+                </div>
+                    <div class="text-center mb-5 mt-3">Already have an account?
+                        <a routerLink="/auth/login">Signin</a>
+                    </div>
+
+                    <button pButton pRipple label="Sign Up" class="w-full p-3 text-xl" (click)="signupUser()"
+                        [disabled]="signupForm.invalid"></button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

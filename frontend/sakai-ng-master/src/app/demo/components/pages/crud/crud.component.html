@@ -1,0 +1,314 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card px-6 py-6">
+            <p-toast></p-toast>
+            <p-toolbar styleClass="mb-4"*ngIf="authService.hasRole('ROLE_ADMIN')">
+                <ng-template pTemplate="left">
+                    <div class="my-2">
+                        <button pButton pRipple label="New" icon="pi pi-plus" class="p-button-success mr-2"
+                        (click)="openAddDialog()"></button>
+                        <button pButton pRipple label="Delete" icon="pi pi-trash" class="p-button-danger"
+                            (click)="openDeleteSelectedUsersDialog()"
+                            [disabled]="!selectedUsers || !selectedUsers.length"></button>
+                    </div>
+                </ng-template>
+
+            </p-toolbar>
+
+            <p-table #dt [value]="this.users" [columns]="cols" responsiveLayout="scroll" [rows]="10"
+                [globalFilterFields]="['username','email']" [paginator]="true" [rowsPerPageOptions]="[10,20,30]"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                [(selection)]="selectedUsers" selectionMode="multiple" [rowHover]="true" dataKey="id">
+                <ng-template pTemplate="caption">
+                    <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                        <h5 class="m-0">Manage Users</h5>
+                        <span class="block mt-2 md:mt-0 p-input-icon-left">
+                            <i class="pi pi-search"></i>
+                            <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..."
+                                class="w-full sm:w-auto" />
+                        </span>
+                    </div>
+                </ng-template>
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 3rem">
+                            <p-tableHeaderCheckbox *ngIf="authService.hasRole('ROLE_ADMIN')"></p-tableHeaderCheckbox>
+                        </th>
+                        <th pSortableColumn="id">ID<p-sortIcon field="id"></p-sortIcon></th>
+                        <th pSortableColumn="username">Username<p-sortIcon field="username"></p-sortIcon></th>
+                        <th pSortableColumn="roles">Roles<p-sortIcon field="roles"></p-sortIcon></th>
+                        <th pSortableColumn="email">Email<p-sortIcon field="email"></p-sortIcon></th>
+                        <th pSortableColumn="firstName">First Name<p-sortIcon field="firstName"></p-sortIcon></th>
+                        <th pSortableColumn="lastName">Last Name<p-sortIcon field="lastName"></p-sortIcon></th>
+                        <th pSortableColumn="phoneNumber">Phone Number<p-sortIcon field="phoneNumber"></p-sortIcon></th>
+                        <th pSortableColumn="address">Address<p-sortIcon field="address"></p-sortIcon></th>
+                        <th></th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-user>
+                    <tr>
+                        <td>
+                            <p-tableCheckbox [value]="user" *ngIf="authService.hasRole('ROLE_ADMIN')"></p-tableCheckbox>
+                        </td>
+                        <td style="width:8%; min-width:4rem;"><span class="p-column-title">ID</span>
+                            {{user.id}}
+                        </td>
+                        <td style="width:12%; min-width:6rem;">
+                            <span class="p-column-title">Username</span>
+                            {{user.username}}
+                        </td>
+                        <td style="width:12%; min-width:6rem;">
+                            <span class="p-column-title">Roles</span>
+                            {{user.roles}}
+                        </td>
+
+                        <td style="width:12%; min-width:6rem;">
+                            <span class="p-column-title">Email</span>
+                            {{user.email}}
+                        </td>
+
+                        <td style="width:12%; min-width:6rem;">
+                            <span class="p-column-title">First Name</span>
+                            {{user.firstName}}
+                        </td>
+
+                        <td style="width:12%; min-width:6rem;">
+                            <span class="p-column-title">Last Name</span>
+                            {{user.lastName}}
+                        </td>
+
+                        <td style="width:12%; min-width:6rem;">
+                            <span class="p-column-title">Phone Number</span>
+                            {{user.phoneNumber}}
+                        </td>
+
+                        <td style="width:15%; min-width:11rem;">
+                            <span class="p-column-title">Address</span>
+                            {{user.address}}
+                        </td>
+
+                        <td>
+                            <div class="flex">
+                                <button pButton pRipple icon="pi pi-pencil"
+                                *ngIf="authService.hasRole('ROLE_MODERATOR') || authService.hasRole('ROLE_ADMIN')"
+                                    class="p-button-rounded p-button-success mr-2" (click)="openEditDialog(user)" 
+                                    [disabled]="!canEdit(user)"></button>
+                                <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-warning"
+                                *ngIf="authService.hasRole('ROLE_ADMIN')" (click)="openDeleteUserDialog(user)"
+                                [disabled]="!canEdit(user)"></button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+
+        <p-dialog [(visible)]="editUserDialog" [style]="{width: '650px'}" header="Edit user" [modal]="true" class="p-fluid">
+            <ng-template pTemplate="content">
+                <form [formGroup]="editUserForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="field">
+                        <label for="username" class="label-required">Username</label>
+                        <input type="text" id="username" pInputText [value]="this.user.username" disabled/>
+                        
+                    </div>
+                    <div class="field">
+                        <label for="email" class="label-required">Email</label>
+                        <input type="email" id="email" pInputText [value]="this.user.email" disabled/>
+                        
+                    </div>
+                    <div class="field">
+                        <label for="firstName" class="label-required">First Name</label>
+                        <input type="text" id="firstName" pInputText formControlName="firstName" autofocus/>
+                        <small class="p-error"
+                            *ngIf="editUserForm.get('firstName').invalid && (editUserForm.get('firstName').dirty || editUserForm.get('firstName').touched)">
+                            <span  *ngIf="editUserForm.get('firstName').errors?.required"> First Name is required.</span>
+                        </small>
+                    </div>
+                    <div class="field">
+                        <label for="lastName" class="label-required">Last Name</label>
+                        <input type="text" id="lastName" pInputText formControlName="lastName" />
+                        <small class="p-error"
+                            *ngIf="editUserForm.get('lastName').invalid && (editUserForm.get('lastName').dirty || editUserForm.get('lastName').touched)">
+                            <span  *ngIf="editUserForm.get('lastName').errors?.required"> Last Name is required.</span>
+                        </small>
+                    </div>
+                    <div class="field">
+                        <label for="phoneNumber">Phone Number</label>
+                        <input type="text" id="phoneNumber" pInputText formControlName="phoneNumber" />
+                    </div>
+                    <div class="field">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" pInputText formControlName="address" />
+                    </div>
+                    <div class="field" *ngIf="authService.hasRole('ROLE_ADMIN')">
+                        <label for="role" class="label-required">Roles</label>
+                        <p-multiSelect [options]="this.options" formControlName="roles"
+                        [showClear]="true" placeholder="Select Roles" [appendTo]="'body'"/>
+                        <small class="p-error"
+                               *ngIf="editUserForm.get('roles').invalid && (editUserForm.get('roles').dirty || editUserForm.get('roles').touched)">
+                          <span  *ngIf="editUserForm.get('roles').errors?.required"> Role is required.</span>
+                        </small>
+                    </div>
+                </form>
+            </ng-template>
+            <ng-template pTemplate="footer">
+                <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+                <button pButton pRipple label="Update" icon="pi pi-check" class="p-button-text" (click)="validateEdit()" [disabled]="editUserForm.invalid"></button>
+            </ng-template>
+        </p-dialog>
+        
+        <p-dialog [(visible)]="addUserDialog" [style]="{width: '650px'}" header="Add user" [modal]="true"
+            class="p-fluid">
+            <ng-template pTemplate="content">
+                <form [formGroup]="addUserForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="field">
+                        <label for="username" class="label-required">Username</label>
+                        <!-- <span class="p-input-icon-left">
+                         <i class="pi pi-user"></i> -->
+                        <input type="text" pInputText placeholder="Username" id="username" formControlName="username"
+                            autofocus (blur)="checkUsername()"/>
+                        <!--  </span> -->
+                        <small class="p-error"
+                            *ngIf="addUserForm.get('username').invalid && (addUserForm.get('username').dirty || addUserForm.get('username').touched)">
+                            <span  *ngIf="addUserForm.get('username').errors?.required"> Username is
+                                required.</span>
+                            <span  *ngIf="addUserForm.get('username').errors?.minlength"> Username
+                                must be at least 3 characters
+                                long.</span>
+                            <span  *ngIf="addUserForm.get('username').errors?.maxlength"> Username
+                                cannot be more than 20 characters
+                                long.</span>
+                            <span  *ngIf="addUserForm.get('username')?.errors?.notAvailable">This username is already
+                                taken.</span>
+                            <span  *ngIf="addUserForm.get('username')?.errors?.pattern">Invalid username.</span>
+                        </small>
+                        <!-- <small class="ng-valid text-green-500 pi pi-check"
+                            *ngIf="addUserForm.get('username').valid && isUsernameAvailable()"> This username is
+                            available
+                        </small> -->
+                    </div>
+                    <div class="field">
+                        <label for="email" class="label-required">Email</label>
+                        <input type="text" id="email" maxlength="50" pInputText placeholder="Email"
+                            formControlName="email" (blur)="checkEmail()"/>
+                        <small class="p-error"
+                            *ngIf="addUserForm.get('email').invalid && (addUserForm.get('email').dirty || addUserForm.get('email').touched)">
+                            <span  *ngIf="addUserForm.get('email').errors?.required"> Email is
+                                required.</span>
+                            <span  *ngIf="addUserForm.get('email')?.errors?.notAvailable">This email is already in
+                                use.</span>
+                            <span  *ngIf="addUserForm.get('email').errors?.email"> Invalid email address.</span>
+                           
+                            <!-- <span class=" pi pi-times" *ngIf="addUserForm.get('email').errors?.pattern"> Invalid email
+                                address.</span> -->
+                        </small>
+                        <!-- <small class="ng-valid text-green-500 pi pi-check"
+                            *ngIf="addUserForm.get('email').valid && isEmailAvailable()">
+                            This email is available</small> -->
+                    </div>
+                    <div class="field">
+                        <label for="password" class="label-required">Password</label>
+                        <p-password type="password" id="password" placeholder="Password" formControlName="password"
+                            [toggleMask]="true" [feedback]="false"></p-password>
+                        <small class="p-error"
+                            *ngIf="addUserForm.get('password').invalid && (addUserForm.get('password').dirty || addUserForm.get('password').touched)">
+                            <span  *ngIf="addUserForm.get('password').errors?.required"> Password is
+                                required.</span>
+                            <span  *ngIf="addUserForm.get('password').errors?.maxlength"> Password
+                                cannot be more than 40 characters long.</span>
+                            <span  *ngIf="addUserForm.get('password').errors?.minlength"> Password
+                                cannot be less than 6 characters long.</span>
+                        </small>
+                    </div>
+                    <div class="field">
+                        <label for="confirmPassword" class="label-required">Confirm Password</label>
+                        <p-password type="password" id="confirmPassword" placeholder="Confirm Password"
+                            formControlName="confirmPassword" [toggleMask]="true" [feedback]="false"></p-password>
+                        <small class="p-error"
+                            *ngIf="addUserForm.get('confirmPassword').invalid && (addUserForm.get('confirmPassword').dirty || addUserForm.get('confirmPassword').touched)">
+                            <span  *ngIf="addUserForm.get('confirmPassword').errors?.required">
+                                Confirm password is required.</span>
+                        </small>
+                        <small class="p-error"
+                            *ngIf="addUserForm.errors?.mismatch && (addUserForm.get('confirmPassword').dirty || addUserForm.get('confirmPassword').touched)">
+                            <span > Passwords do not match.</span>
+                        </small>
+                    </div>
+                    <div class="field">
+                        <label for="firstName" class="label-required">First Name</label>
+                        <input type="text" pInputText placeholder="First Name" id="firstName"
+                            formControlName="firstName" />
+                        <small class="p-error"
+                            *ngIf="addUserForm.get('firstName').invalid && (addUserForm.get('firstName').dirty || addUserForm.get('firstName').touched)">
+                            <span  *ngIf="addUserForm.get('firstName').errors?.required"> First Name
+                                is required.</span>
+                        </small>
+                    </div>
+                    <div class="field">
+                        <label for="lastName" class="label-required">Last Name</label>
+                        <input type="text" pInputText placeholder="Last Name" id="lastName"
+                            formControlName="lastName" />
+                        <small class="p-error"
+                            *ngIf="addUserForm.get('lastName').invalid && (addUserForm.get('lastName').dirty || addUserForm.get('lastName').touched)">
+                            <span  *ngIf="addUserForm.get('lastName').errors?.required"> Last Name is
+                                required.</span>
+                        </small>
+                    </div>
+                    <div class="field">
+                        <label for="phoneNumber">Phone Number</label>
+                        <input type="text" pInputText placeholder="Phone Number" id="phoneNumber"
+                            formControlName="phoneNumber" />
+                    </div>
+
+                    <div class="field">
+                        <label for="address">Address</label>
+                        <input type="text" pInputText placeholder="Address" id="address" formControlName="address" />
+                    </div>
+                    <div class="field" *ngIf="authService.hasRole('ROLE_ADMIN')">
+                        <label for="role" class="label-required">Roles</label>
+                        <p-multiSelect [options]="this.options" formControlName="roles"
+                        [showClear]="true" placeholder="Select Roles" [appendTo]="'body'" />
+                        <small class="p-error"
+                               *ngIf="addUserForm.get('roles').invalid && (addUserForm.get('roles').dirty || addUserForm.get('roles').touched)">
+                          <span  *ngIf="addUserForm.get('roles').errors?.required"> Role is required.</span>
+                        </small>
+                    </div>
+                </form>
+            </ng-template>
+
+            <ng-template pTemplate="footer">
+                <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text"
+                    (click)="hideDialog()"></button>
+                <button pButton pRipple label="Add" icon="pi pi-check" class="p-button-text" (click)="validateAdd()"
+                    [disabled]="addUserForm.invalid"></button>
+            </ng-template>
+        </p-dialog>
+
+        <p-dialog [(visible)]="deleteUserDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
+            <div class="flex align-items-center justify-content-center">
+                <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+                <span *ngIf="user">Are you sure you want to delete <b>{{user.username}}</b>?</span>
+            </div>
+            <ng-template pTemplate="footer">
+                <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No"
+                    (click)="deleteUserDialog = false"></button>
+                <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes"
+                    (click)="confirmDelete()"></button>
+            </ng-template>
+        </p-dialog>
+
+        <p-dialog [(visible)]="deleteUsersDialog" header="Confirm" [modal]="true" [style]="{width:'450px'}">
+            <div class="flex align-items-center justify-content-center">
+                <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem"></i>
+                <span>Are you sure you want to delete selected users?</span>
+            </div>
+            <ng-template pTemplate="footer">
+                <button pButton pRipple icon="pi pi-times" class="p-button-text" label="No"
+                    (click)="deleteUsersDialog = false"></button>
+                <button pButton pRipple icon="pi pi-check" class="p-button-text" label="Yes"
+                    (click)="confirmDeleteSelected()"></button>
+            </ng-template>
+        </p-dialog>
+    </div>
+</div>

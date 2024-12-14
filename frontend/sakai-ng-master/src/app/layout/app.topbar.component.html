@@ -1,0 +1,140 @@
+<div class="layout-topbar">
+    <a class="layout-topbar-logo flex justify-content-center" routerLink="">
+        <img src="assets/layout/images/logoPro2.png"
+            alt="logo">
+    </a>
+
+    
+    <button #menubutton class="p-link layout-menu-button layout-topbar-button" (click)="layoutService.onMenuToggle()">
+        <i class="pi pi-bars"></i>
+    </button>
+
+    <button #topbarmenubutton class="p-link layout-topbar-menu-button layout-topbar-button"
+        (click)="layoutService.showProfileSidebar()">
+        <i class="pi pi-ellipsis-v"></i>
+    </button>
+
+    <div #topbarmenu class="layout-topbar-menu"
+        [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
+        <!-- <button class="p-link layout-topbar-button">
+            <i class="pi pi-calendar"></i>
+            <span>Calendar</span>
+        </button> -->
+        <div class="user-info">
+            <div>{{currentUser.username}}</div>
+            <div class="roles">{{currentUser.roles}}</div>
+            <!-- <ul>
+                <li *ngFor="let role of currentUser.roles">{{ role }}</li>
+            </ul> -->
+        </div>
+        <button class="p-link layout-topbar-button" (click)="show($event, op)">
+            <i class="pi pi-user"></i>
+            <span>Profile</span>
+        </button>
+
+        <p-overlayPanel #op>
+            <div>
+                <div class="text-center">
+                    <span class="font-medium text-2xl font-semibold mb-5">Hi,
+                        {{currentUser!=null? currentUser.firstName : 'Unknown'}}
+                    </span>
+                </div>
+                <br>
+                    <button  pButton pRipple (click)="changePassword()" 
+                    label="Change Password" class="p-button-text" icon="pi pi-lock">
+                    </button>
+                    <br>
+                    <button  pButton pRipple (click)="openEditDialog()" 
+                    label="Edit Profile" class="p-button-text" icon="pi pi-user-edit">
+                    </button>
+                    <br>
+                    <button  pButton pRipple (click)="signOut()" 
+                    label="Sign-Out" class="p-button-text" icon="pi pi-sign-out">
+                    </button>
+                
+            </div>
+        </p-overlayPanel>
+        <!-- <button class="p-link layout-topbar-button" [routerLink]="'/documentation'">
+            <i class="pi pi-cog"></i>
+            <span>Settings</span>
+        </button> -->
+    </div>
+</div>
+<p-toast></p-toast>
+
+<p-dialog header="Edit Profile" [(visible)]="editProfileDialog" [modal]="true" [style]="{width: '500px'}">
+    <form [formGroup]="editProfileForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="field">
+            <label for="username" class="label-required">Username</label>
+            <input type="text" id="username" pInputText [value]="this.currentUser.username" disabled/>
+            
+        </div>
+        <div class="field">
+            <label for="email" class="label-required">Email</label>
+            <input type="email" id="email" pInputText [value]="this.currentUser.email" disabled/>
+            
+        </div>
+        <div class="field">
+            <label for="firstName" class="label-required">First Name</label>
+            <input type="text" id="firstName" pInputText formControlName="firstName" autofocus/>
+            <small class="p-error"
+                *ngIf="editProfileForm.get('firstName').invalid && (editProfileForm.get('firstName').dirty || editProfileForm.get('firstName').touched)">
+                <span class="pi pi-times" *ngIf="editProfileForm.get('firstName').errors?.required"> First Name is required.</span>
+            </small>
+        </div>
+        <div class="field">
+            <label for="lastName" class="label-required">Last Name</label>
+            <input type="text" id="lastName" pInputText formControlName="lastName" />
+            <small class="p-error"
+                *ngIf="editProfileForm.get('lastName').invalid && (editProfileForm.get('lastName').dirty || editProfileForm.get('lastName').touched)">
+                <span class="pi pi-times" *ngIf="editProfileForm.get('lastName').errors?.required"> Last Name is required.</span>
+            </small>
+        </div>
+        <div class="field">
+            <label for="phoneNumber">Phone Number</label>
+            <input type="text" id="phoneNumber" pInputText formControlName="phoneNumber" />
+        </div>
+        <div class="field">
+            <label for="address">Address</label>
+            <input type="text" id="address" pInputText formControlName="address" />
+        </div>
+    </form>
+    <p-footer>
+        <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+        <button pButton pRipple label="Update" icon="pi pi-check" class="p-button-text" (click)="editProfile()" [disabled]="editProfileForm.invalid"></button>
+    </p-footer>
+</p-dialog>
+
+<p-dialog [(visible)]="changePasswordDialog" [style]="{width: '500px'}" header="Change User Password" [modal]="true"
+    class="p-fluid" >
+    <ng-template pTemplate="content">
+        <div >
+            <div class="field">
+                <label for="oldPassword" style="margin-top: 15px;" class="label-required">Old Password</label>
+                <p-password type="password" id="oldPassword" placeholder="Old Password"
+                    [(ngModel)]="updatedUser.oldPassword" [toggleMask]="true" [feedback]="false"></p-password>
+            </div>
+            <div class="field">
+                <label for="password" style="margin-top: 15px;" class="label-required">Password</label>
+                <p-password type="password" id="password" placeholder="Password" [(ngModel)]="password"
+                    [toggleMask]="true" (ngModelChange)="checkPasswords()" [feedback]="false"></p-password>
+            </div>
+            <div class="field">
+                <label for="confirmPassword" class="label-required">Confirm Password</label>
+                <p-password type="password" id="confirmPassword" placeholder="Confirm Password"
+                    [(ngModel)]="confirmPassword" [toggleMask]="true"
+                    (ngModelChange)="checkPasswords()" [feedback]="false"></p-password>
+                <small class="ng-dirty ng-invalid text-red-500" *ngIf="!passwordsMatch">Passwords don't
+                    match</small>
+            </div>
+        </div>
+
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Cancel" icon="pi pi-times" class="p-button-text"
+            (click)="hideDialog()"></button>
+        <button pButton pRipple label="Save" icon="pi pi-check" class="p-button-text"
+         [disabled]="!fieldsValid()"   (click)="validateChangePassword()"></button>
+    </ng-template>
+</p-dialog>
